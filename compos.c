@@ -27,13 +27,12 @@ unsigned int hook_func_out (void *priv,
     // unsigned int src_ip = (unsigned int)ip_header->saddr;
     unsigned int dest_ip = (unsigned int)ip_header->daddr;
 
-    printk(KERN_INFO "packet with dest %u", dest_ip);
+    printk("packet with dest %pI4", dest_ip);
     if (false) {
         return NF_DROP;
     }
-    else {
-        return NF_ACCEPT;
-    }
+
+    return NF_ACCEPT;
 }
 
 static int __init compos_init(void) {
