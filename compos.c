@@ -23,11 +23,11 @@ unsigned int hook_func_out (void *priv,
                             const struct nf_hook_state *state) {
 
     // Intercept outbound packets
-    struct iphdr *ip_header = (struct iphdr *)skb_network_header(skb);
+    struct iphdr *ip_header = (struct iphdr *) skb_network_header(skb);
     // unsigned int src_ip = (unsigned int)ip_header->saddr;
-    unsigned int dest_ip = (unsigned int)ip_header->daddr;
+    unsigned int dest_ip = (unsigned int) ip_header->daddr;
 
-    printk("packet with dest %pI4", dest_ip);
+    printk("packet with dest %pI4", &dest_ip);
     if (false) {
         return NF_DROP;
     }
