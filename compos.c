@@ -12,6 +12,10 @@
 #include <linux/ip.h>
 #include <linux/skbuff.h>
 
+// Import JSON libraries to interface with compos_ctl
+#include "lib/jsmn.h"
+
+
 MODULE_LICENSE("MIT");
 MODULE_AUTHOR("cydrobolt");
 MODULE_DESCRIPTION("compos self-control module");
