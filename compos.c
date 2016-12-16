@@ -26,54 +26,46 @@ MODULE_DESCRIPTION("compos self-control module");
 
 static struct nf_hook_ops nfho;
 static struct proc_dir_entry *proc_entry;
-static unsigned long procfs_buffer_size = 0;
+
 static char procfs_buffer[PROCFS_MAX_SIZE];
+static int procfs_buffer_size = 0;
 
-static ssize_t cp_proc_read(struct file*, char*, size_t, loff_t*);
-static ssize_t cp_proc_write(struct file*, char*, size_t, loff_t*);
-
-
-static const struct file_operations cp_fops = {
-    owner: THIS_MODULE,
-    // .open       = cp_proc_open,
-    read: cp_proc_read,
-    write: cp_proc_write
-};
-
-static ssize_t cp_proc_write(struct file *file, char *buffer, size_t count, loff_t *offset) {
+/* proc file functions */
+static int cp_proc_write(struct file *file, char *buffer, size_t count, loff_t *offset) {
     procfs_buffer_size = count;
     if (procfs_buffer_size > PROCFS_MAX_SIZE) {
         procfs_buffer_size = PROCFS_MAX_SIZE;
     }
 
-    // write data to buffer
-    if ( copy_from_user(procfs_buffer, buffer, procfs_buffer_size) ) {
-        // debug data
-        // printk(KERN_INFO procfs_buffer);
+    printk(KERN_INFO "received something in write!");
+    if (!copy_from_user(procfs_buffer, buffer, procfs_buffer_size)) {
         printk(KERN_INFO "received information in procfile");
+        printk(KERN_INFO "%s", procfs_buffer);
         return -EFAULT;
     }
 
     return procfs_buffer_size;
 }
 
-static ssize_t cp_proc_read(struct file *file, char *buffer, size_t count, loff_t *offset) {
-    static int finished = 0;
-    int ret = 0;
-
-    printk(KERN_INFO "procfile_read (/proc/%s) called\n", PROCFS_NAME);
-
-    if (finished) {
-        printk(KERN_INFO "procfs_read: END\n");
-        finished = 0;
-        return 0;
-    }
-
-    finished = 1;
-    ret = sprintf(buffer, "Hello,world!\n");
-    return ret;
+static int cp_proc_show(struct seq_file *m, void *v) {
+    seq_printf(m, "hello world!\n");
+    return 0;
 }
 
+static int cp_proc_open(struct inode *inode, struct file *file) {
+    return single_open(file, cp_proc_show, NULL);
+}
+
+static const struct file_operations cp_fops = {
+    owner: THIS_MODULE,
+    open: cp_proc_open,
+    read: seq_read,
+    llseek: seq_lseek,
+    release: single_release,
+    write: cp_proc_write
+};
+
+/* netfilter hooks */
 unsigned int hook_func_out (void *priv,
                             struct sk_buff *skb,
                             const struct nf_hook_state *state) {
@@ -91,6 +83,7 @@ unsigned int hook_func_out (void *priv,
     return NF_ACCEPT;
 }
 
+/* initialize & cleanup compos */
 static int __init compos_init(void) {
     printk(KERN_INFO "Loading compos\n");
 
